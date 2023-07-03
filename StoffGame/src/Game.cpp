@@ -1,27 +1,29 @@
-#include "renderer/Renderer.h"
-#include "utils/UserInput.h"
-#include "utils/Globals.h"
-#include "Sprite.h"
+#pragma once
 
+#include "Game.h"
 #include <iostream>
 
+struct Globals
+{
+	float MOUSE_SCROLL = 0.0f;
+	const float MOUSE_SCROLL_SENSITIVITY = 0.1f;
+	const float CAMERA_SPEED = 2.0f;
+};
 static Globals globals;
 
-void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
-
-int main()
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	// Setup.
-	Renderer2D renderer;
-	GLFWwindow* window = renderer.GetWindow();
-	UserInput userInput(window);
+	globals.MOUSE_SCROLL = ((float)yOffset) * globals.MOUSE_SCROLL_SENSITIVITY;
+}
 
-	// Callbacks.
+Game::Game()
+{
 	glfwSetScrollCallback(window, ScrollCallback);
+}
 
-	// Feature Test, Sprite.
-	Sprite sprite;
-
+void Game::Run()
+{
+	NewGame();
 	while (!glfwWindowShouldClose(window))
 	{
 		userInput.UpdateInputs();
@@ -35,14 +37,13 @@ int main()
 		renderer.ZoomCamera(globals.MOUSE_SCROLL);
 		globals.MOUSE_SCROLL *= 0.95f; // Slowly decreases scroll value for smooth zooming in/out.
 
-
 		// ------------------------ Render here ------------------------
 		glm::vec4 clearColour(0.2f, 0.6f, 0.8f, 1.0f);
 		renderer.ClearScreen(clearColour);
 
 		renderer.StartBatch();
 
-		sprite.Render(renderer);
+		for (Sprite* sprite : m_sprites) sprite->Render(renderer);
 
 		renderer.SubmitBatch();
 		// -------------------------------------------------------------
@@ -53,7 +54,14 @@ int main()
 	glfwTerminate();
 }
 
-void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+void Game::NewGame()
 {
-	globals.MOUSE_SCROLL = ((float) yOffset) * globals.MOUSE_SCROLL_SENSITIVITY;
+	m_sprites.clear();
+	m_animatedSprites.clear();
+
+	// Load Game. Test with both Animated and base Sprite.
+	Sprite* sprite1 = new Sprite(glm::vec2(-50.0f));
+	AnimatedSprite* sprite2 = new AnimatedSprite();
+	m_sprites.push_back(sprite1);
+	m_sprites.push_back(sprite2);
 }
