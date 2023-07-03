@@ -1,6 +1,7 @@
 #include "renderer/Renderer.h"
 #include "utils/UserInput.h"
 #include "utils/Globals.h"
+#include "Sprite.h"
 
 #include <iostream>
 
@@ -18,9 +19,13 @@ int main()
 	// Callbacks.
 	glfwSetScrollCallback(window, ScrollCallback);
 
+	// Feature Test, Sprite.
+	Sprite sprite;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		userInput.UpdateInputs();
+
 		// Camera movement test with input class.
 		if (userInput.IsPressed(Key_ESC)) glfwSetWindowShouldClose(window, true);
 		if (userInput.IsPressed(Key_W)) renderer.MoveCamera(0.0f, globals.CAMERA_SPEED);
@@ -30,13 +35,14 @@ int main()
 		renderer.ZoomCamera(globals.MOUSE_SCROLL);
 		globals.MOUSE_SCROLL *= 0.95f; // Slowly decreases scroll value for smooth zooming in/out.
 
+
 		// ------------------------ Render here ------------------------
 		glm::vec4 clearColour(0.2f, 0.6f, 0.8f, 1.0f);
 		renderer.ClearScreen(clearColour);
 
 		renderer.StartBatch();
 
-		renderer.AddQuad(glm::vec2(-50.0f, -50.0f), glm::vec2(100.0f), glm::vec4(1.0f)); // White 100p x 100p square.
+		sprite.Render(renderer);
 
 		renderer.SubmitBatch();
 		// -------------------------------------------------------------
