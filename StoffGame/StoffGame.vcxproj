@@ -599,7 +599,7 @@
     <ClCompile Include="src\vendor\glad.c" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\sprites\TileSet.png" />
+    <Image Include="res\sprites\coin.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

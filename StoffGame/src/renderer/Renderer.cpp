@@ -162,6 +162,7 @@ void Renderer2D::SubmitBatch()
 }
 void Renderer2D::AddQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& texCoords, const glm::vec4& colour, float texIndex)
 {
+    // TexCoords in format x1, y1, x2, y2.
     s_RData.vertexBufferPtr->position[0] = position.x;
     s_RData.vertexBufferPtr->position[1] = position.y;
     s_RData.vertexBufferPtr->texCoord[0] = texCoords[0];

@@ -20,7 +20,10 @@ public:
 	AnimatedSprite();
 	void Update(float timestep);
 	void SetCurrentAnimation(Animation animation);
-	void AddAnimation(Animation animation, std::vector<glm::vec4> frames);
+	
+	// Adds vector of texCoords to internal map with the key animation.
+	// speed -> speed of animation in frames per second.
+	void AddAnimation(Animation animation, std::vector<glm::vec4> frames, float speed);
 
 private:
 	float m_animationCumulator;

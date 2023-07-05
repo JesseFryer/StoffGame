@@ -1,4 +1,5 @@
 #include "AnimatedSprite.h"
+#include <iostream>
 
 // Constructors.
 AnimatedSprite::AnimatedSprite()
@@ -22,8 +23,10 @@ void AnimatedSprite::SetCurrentAnimation(Animation animation)
 	m_currentAnimation = animation;
 }
 
-void AnimatedSprite::AddAnimation(Animation animation, std::vector<glm::vec4> frames)
+void AnimatedSprite::AddAnimation(Animation animation, std::vector<glm::vec4> frames, float speed)
 {
+	m_animations[animation] = frames;
+	m_animationSpeeds[animation] = speed;
 }
 
 // Helper.

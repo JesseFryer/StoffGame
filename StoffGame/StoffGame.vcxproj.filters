@@ -1345,7 +1345,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\sprites\TileSet.png">
+    <Image Include="res\sprites\coin.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
