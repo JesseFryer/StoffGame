@@ -438,11 +438,15 @@
     <ClInclude Include="deps\include\GLM\vector_relational.hpp" />
     <ClInclude Include="deps\include\KHR\khrplatform.h" />
     <ClInclude Include="src\classes\AnimatedSprite.h" />
+    <ClInclude Include="src\classes\Entity.h" />
+    <ClInclude Include="src\classes\Player.h" />
+    <ClInclude Include="src\classes\Tile.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\renderer\Renderer.h" />
     <ClInclude Include="src\renderer\Shader.h" />
     <ClInclude Include="src\renderer\stb_image.h" />
     <ClInclude Include="src\classes\Sprite.h" />
+    <ClInclude Include="src\utils\Map.h" />
     <ClInclude Include="src\utils\UserInput.h" />
     <ClInclude Include="src\utils\SpriteSheet.h" />
   </ItemGroup>
@@ -588,18 +592,26 @@
   <ItemGroup>
     <ClCompile Include="deps\include\GLM\detail\glm.cpp" />
     <ClCompile Include="src\classes\AnimatedSprite.cpp" />
+    <ClCompile Include="src\classes\Entity.cpp" />
+    <ClCompile Include="src\classes\Player.cpp" />
+    <ClCompile Include="src\classes\Tile.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\renderer\Renderer.cpp" />
     <ClCompile Include="src\renderer\Shader.cpp" />
     <ClCompile Include="src\renderer\stb_image.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\classes\Sprite.cpp" />
+    <ClCompile Include="src\utils\Map.cpp" />
     <ClCompile Include="src\utils\UserInput.cpp" />
     <ClCompile Include="src\utils\SpriteSheet.cpp" />
     <ClCompile Include="src\vendor\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\sprites\coin.png" />
+    <Image Include="res\sprites\PlayerSpriteSheet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\maps\map1.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

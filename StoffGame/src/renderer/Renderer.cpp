@@ -268,7 +268,7 @@ GLFWwindow* Renderer2D::GetWindow()
 {
 	return s_Window;
 }
-void Renderer2D::SetCameraPosition(glm::vec2& position)
+void Renderer2D::SetCameraPosition(glm::vec2 position)
 {
     s_CData.position.x = position.x;
     s_CData.position.y = position.y;
