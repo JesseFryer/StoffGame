@@ -19,6 +19,8 @@ public:
 public:
 	glm::vec2 GetPosition();
 	glm::vec2 GetSize();
+	glm::vec4 GetRect();
+	glm::vec2 GetCenter();
 
 public:
 	void Move(float dx, float dy);

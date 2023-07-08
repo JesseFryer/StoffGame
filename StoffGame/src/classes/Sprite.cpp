@@ -61,6 +61,16 @@ glm::vec2 Sprite::GetSize()
 	return m_size;
 }
 
+glm::vec4 Sprite::GetRect()
+{
+	return glm::vec4(m_position, m_size);
+}
+
+glm::vec2 Sprite::GetCenter()
+{
+	return glm::vec2(m_position[0] + (m_size[0] * 0.5f), m_position[1] + (m_size[1] * 0.5f));
+}
+
 // Setters.
 void Sprite::Move(float dx, float dy)
 {

@@ -4,7 +4,8 @@
 
 enum TileType
 {
-	DEFAULT
+	DEFAULT,
+	EMPTY
 };
 
 class Tile : public Sprite 

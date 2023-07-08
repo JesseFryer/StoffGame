@@ -1,27 +1,32 @@
 #include "Player.h"
 
 static float SPEED = 150.0f;
-static float JUMP_STRENGTH = 2.0f;
+static float JUMP_STRENGTH = 3.0f;
 
 Player::Player(UserInput* inputs) 
 {
 	m_inputs = inputs;
 	Entity::Entity();
 }
-
 void Player::Update(float timeStep)
 {
-	float dx = 0.0f;  // no acceleration on horizontal movement.
-	if (m_inputs->IsPressed(Key_D)) dx += SPEED * timeStep;
-	if (m_inputs->IsPressed(Key_A)) dx -= SPEED * timeStep;
-	Move(dx, 0.0f);
+	float velX = 0.0f;
+	if (m_inputs->IsPressed(Key_D)) velX += SPEED * timeStep;
+	if (m_inputs->IsPressed(Key_A)) velX += -SPEED * timeStep;
 
 	float velY = 0.0f;
-	if (m_inputs->IsPressed(Key_SPC) && m_canJump)
+	if (m_inputs->IsPressed(Key_SPC) && CanJump())
 	{
-		velY += JUMP_STRENGTH;
-		m_canJump = false;
+		velY = JUMP_STRENGTH;
+		SetCantJump();
 	}
 	ChangeVelocity(0.0f, velY);
-	Entity::Update(timeStep); // this will apply resultant velocity.
+	SetVelocity(velX, GetVelocityY()); // No acceleration on x moevement.
+	Entity::Update(timeStep);
+}
+
+glm::vec4 Player::GetCollider()
+{
+
+	return glm::vec4(GetPosition()[0] + 4.0f, GetPosition()[1], 12.0f, 29.0f);
 }

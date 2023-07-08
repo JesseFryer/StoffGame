@@ -2,17 +2,21 @@
 
 
 static float SPEED = 100.0f;
-static float GRAVITY = -0.6f;
-static float MAX_FALL_SPEED = -100.0f;
+static float GRAVITY = -10.0f;
+static float MAX_FALL_SPEED = -5.0f;
 
 Entity::Entity()
 {
 	m_gravity = GRAVITY;
 }
+Entity::Entity(glm::vec2 position)
+{
+	SetPosition(position);
+}
 void Entity::Update(float timeStep)
 {
 	ApplyGravity(timeStep);
-	Move(m_velX, m_velY);
+	if (m_velY < MAX_FALL_SPEED) m_velY = MAX_FALL_SPEED;
 	AnimatedSprite::Update(timeStep);
 }
 
@@ -23,6 +27,16 @@ float Entity::GetVelocityX()
 float Entity::GetVelocityY()
 {
 	return m_velY;
+}
+
+bool Entity::CanJump()
+{
+	return m_canJump;
+}
+
+glm::vec4 Entity::GetCollider()
+{
+	return GetRect();
 }
 
 void Entity::ChangeVelocity(float dVelX, float dVelY)
@@ -38,6 +52,14 @@ void Entity::SetVelocity(float velX, float velY)
 void Entity::SetGravity(float gravity)
 {
 	m_gravity = gravity;
+}
+void Entity::SetCantJump()
+{
+	m_canJump = false;
+}
+void Entity::SetCanJump()
+{
+	m_canJump = true;
 }
 void Entity::ApplyGravity(float timeStep)
 {
