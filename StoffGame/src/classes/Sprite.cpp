@@ -44,7 +44,7 @@ Sprite::Sprite(glm::vec2 position, float texID, glm::vec4 texCoords)
 void Sprite::Render(Renderer2D& renderer)
 {
 	// Render white quad if no texture has been set yet.
-	if (m_texID == -1.0f) renderer.AddQuad(m_position, m_size, glm::vec4(1.0f));
+	if (m_texID == -1.0f) renderer.AddQuad(m_position, m_size, m_colour);
 	else 
 	{
 		renderer.AddQuad(m_position, m_size, m_texCoords, m_texID);
@@ -92,4 +92,9 @@ void Sprite::SetTexCoords(glm::vec4 texCoords)
 void Sprite::SetTexID(float texID)
 {
 	m_texID = texID;
+}
+
+void Sprite::SetColour(glm::vec4 colour)
+{
+	m_colour = colour;
 }

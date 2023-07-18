@@ -2,7 +2,8 @@
 #include <iostream>
 
 static Player* s_player = nullptr; // All enemies will have access to player info.
-static float s_speed = 50.0f;
+static float s_acceleration = 2.0f;
+const static float s_maxSpeed = 1.0f;
 
 Enemy::Enemy(glm::vec2 position)
 {
@@ -12,17 +13,43 @@ Enemy::Enemy(glm::vec2 position)
 
 void Enemy::Update(float timeStep)
 {
+	m_healthBar.SetPosition(glm::vec2(GetPosition()[0], GetPosition()[1] + GetSize()[1] + 5.0f));
+	m_healthBar.Update();
+
 	float dVelX = 0.0f;
 	float dVelY = 0.0f;
 
 	// Basic logic to follow player.
-	if (s_player->GetPosition()[0] > GetPosition()[0]) dVelX += s_speed * timeStep;
-	if (s_player->GetPosition()[0] < GetPosition()[0]) dVelX -= s_speed * timeStep;
-	SetVelocity(dVelX, GetVelocityY()); // No acceleration on x moevement.
+	if (s_player->GetPosition()[0] > GetPosition()[0]) dVelX += s_acceleration * timeStep;
+	if (s_player->GetPosition()[0] < GetPosition()[0]) dVelX -= s_acceleration * timeStep;
+	float velXResult = dVelX + GetVelocityX();
+	if (GetVelocityY() == 0.0f)
+	{
+		if (velXResult > s_maxSpeed) velXResult = s_maxSpeed;
+		if (velXResult < -s_maxSpeed) velXResult = -s_maxSpeed;
+	}
+	SetVelocity(velXResult, GetVelocityY()); // No acceleration on x moevement.
 	Entity::Update(timeStep);
 }
 
 void Enemy::SetPlayerPointer(Player* player)
 {
 	s_player = player;
+}
+
+void Enemy::Damage(float dmg)
+{
+	m_healthBar.ChangeHealthBy(-dmg);
+}
+
+bool Enemy::IsDead()
+{
+	if (m_healthBar.GetHealth() > 0.0f) return false;
+	return true;
+}
+
+void Enemy::Render(Renderer2D& renderer)
+{
+	Sprite::Render(renderer);
+	m_healthBar.Render(renderer);
 }

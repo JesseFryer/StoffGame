@@ -441,6 +441,8 @@
     <ClInclude Include="src\classes\Bullet.h" />
     <ClInclude Include="src\classes\Enemy.h" />
     <ClInclude Include="src\classes\Entity.h" />
+    <ClInclude Include="src\classes\HealthBar.h" />
+    <ClInclude Include="src\classes\Particle.h" />
     <ClInclude Include="src\classes\Player.h" />
     <ClInclude Include="src\classes\Tile.h" />
     <ClInclude Include="src\Game.h" />
@@ -597,6 +599,8 @@
     <ClCompile Include="src\classes\Bullet.cpp" />
     <ClCompile Include="src\classes\Enemy.cpp" />
     <ClCompile Include="src\classes\Entity.cpp" />
+    <ClCompile Include="src\classes\HealthBar.cpp" />
+    <ClCompile Include="src\classes\Particle.cpp" />
     <ClCompile Include="src\classes\Player.cpp" />
     <ClCompile Include="src\classes\Tile.cpp" />
     <ClCompile Include="src\Game.cpp" />

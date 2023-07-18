@@ -7,6 +7,7 @@ class Bullet : public AnimatedSprite
 public:
 	Bullet(glm::vec2 position, glm::vec2 velocityVector);
 	void Update(float timeStep);
+	float GetXDirection();
 	bool AliveTooLong();
 
 private:

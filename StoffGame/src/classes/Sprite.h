@@ -28,10 +28,12 @@ public:
 	void SetSize(glm::vec2 size);
 	void SetTexCoords(glm::vec4 texCoords);
 	void SetTexID(float texID);
+	void SetColour(glm::vec4 colour);
 
 private:
 	glm::vec2 m_position;
 	glm::vec2 m_size;
 	glm::vec4 m_texCoords;
+	glm::vec4 m_colour = glm::vec4(1.0f);
 	float m_texID;
 };

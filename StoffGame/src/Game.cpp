@@ -2,8 +2,6 @@
 
 #include "Game.h"
 #include <iostream>
-#include <chrono>
-#include <thread>
 
 struct Globals
 {
@@ -12,6 +10,8 @@ struct Globals
 	const float CAMERA_SPEED = 2.0f;
 	const glm::vec2 SPAWN_POINT = glm::vec2(600.0f, 1000.0f);
 	const double FRAME_CAP = 1.0 / 144.0;
+	const unsigned int MAX_PARTICLES = 100;
+	unsigned int PARTICLE_COUNT = 0;
 };
 static Globals globals;
 void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
@@ -24,13 +24,18 @@ Game::Game()
 	glfwSetScrollCallback(m_window, ScrollCallback);
 	LoadTextures();
 	LoadMap("res/maps/map1.txt", "map1");
+	particles = new Particle[globals.MAX_PARTICLES];
+	particlesPtr = particles;
 	NewGame();
 }
 Game::~Game()
 {
-	for (Entity* entity : m_entities) delete entity;
+	delete m_player;
+	for (Enemy* enemy : m_enemies) delete enemy;
 	for (Tile* tile : m_tiles) delete tile;
+	for (Bullet* bullet : m_bullets) delete bullet;
 	for (auto& pair : m_spriteSheets) delete pair.second;
+	delete[] particles;
 }
 
 void Game::Run()
@@ -48,6 +53,12 @@ void Game::Run()
 		lastTime = currentTime;
 		if (logFpsCounter > 100)
 		{
+			for (int i = 0; i < 5; i++)
+			{
+				Enemy* enemy = new Enemy(glm::vec2(i * 40.0f, 1000.0f));
+				enemy->SetCurrentAnimation(NONE);
+				m_enemies.push_back(enemy);
+			}
 			logFpsCounter = 0;
 			std::cout << 1.0 / timeStep << "\n";
 		}
@@ -68,22 +79,6 @@ void Game::NewGame()
 	Reset();
 
 	m_player = new Player(&m_userInput);
-	Enemy::SetPlayerPointer(m_player);
-
-	Entity* coin = new Entity(glm::vec2(300.0f, 1000.0f));
-	Enemy* enemy = new Enemy(glm::vec2(800.0f, 1000.0f));
-	enemy->SetCurrentAnimation(NONE);
-
-	m_entities.push_back(m_player);
-	m_entities.push_back(coin);
-	m_entities.push_back(enemy);
-	
-	coin->SetTexID(m_textureIDs["coin"]);
-	std::vector<unsigned int> coinSpinFrames = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-	coin->AddAnimation(IDLE, m_spriteSheets["coin"]->GetAnimation(coinSpinFrames, false), 36.0f);
-	coin->SetCurrentAnimation(IDLE);
-	coin->SetGravity(-10.0f);
-
 	m_player->SetTexID(m_textureIDs["player"]);
 	std::vector<unsigned int> playerIdleFrames = { 0, 1, 2, 3, 4, 5 };
 	m_player->AddAnimation(IDLE, m_spriteSheets["player"]->GetAnimation(playerIdleFrames, false), 8.0f);
@@ -91,6 +86,7 @@ void Game::NewGame()
 	m_player->SetSize(glm::vec2(20.0f, 32.0f));
 	m_player->SetPosition(globals.SPAWN_POINT);
 
+	Enemy::SetPlayerPointer(m_player);
 	UseMap("map1");
 }
 void Game::LoadMap(const char* filePath, std::string mapName)
@@ -173,19 +169,32 @@ void Game::RenderFrame()
 	m_renderer.ClearScreen(clearColour);
 
 	m_renderer.StartBatch();
-	for (Entity* entity : m_entities) entity->Render(m_renderer);
 	for (Tile* tile : m_tiles) tile->Render(m_renderer);
 	for (Bullet* bullet : m_bullets) bullet->Render(m_renderer);
+	for (Enemy* entity : m_enemies) entity->Render(m_renderer);
+	m_player->Render(m_renderer);
+	for (Particle* p = particles; p < particles + globals.MAX_PARTICLES; p++)
+	{
+		if (p->IsAlive()) p->Render(m_renderer);
+	}
 	m_renderer.SubmitBatch();
 
 	glfwSwapBuffers(m_window);
 }
 void Game::Update(float timeStep)
 {
-	for (Entity* entity : m_entities) entity->Update(timeStep);
+	m_player->Update(timeStep);
+	for (Enemy* enemy : m_enemies) enemy->Update(timeStep);
 	for (Bullet* bullet : m_bullets) bullet->Update(timeStep);
-	EntityTileCollisions(timeStep);
+	for (Particle* p = particles; p < particles + globals.MAX_PARTICLES; p++)
+	{
+		if (p->IsAlive()) p->Update(timeStep);
+	}
+	PlayerTileCollisions();
+	EntityTileCollisions();
 	BulletTileCollisions();
+	BulletEnemyCollisions();
+	ParticleTileCollisions();
 }
 bool Game::HasCollided(glm::vec4 rect1, glm::vec4 rect2)
 {
@@ -199,10 +208,9 @@ bool Game::HasCollided(glm::vec4 rect1, glm::vec4 rect2)
 	}
 	return false;
 }
-void Game::EntityTileCollisions(float timeStep)
+void Game::EntityTileCollisions()
 {
-	// Check/Resolve collisions.
-	for (Entity* entity : m_entities)
+	for (Enemy* entity : m_enemies)
 	{
 		float dx = entity->GetVelocityX();
 		float dy = entity->GetVelocityY();
@@ -259,12 +267,150 @@ void Game::BulletTileCollisions()
 		}
 	}
 }
+void Game::ParticleTileCollisions()
+{
+	for (Particle* particle = particles; particle < particles + globals.MAX_PARTICLES; particle++)
+	{
+		if (particle->IsAlive())
+		{
+			float dx = particle->GetVelocityX();
+			float dy = particle->GetVelocityY();
+
+			float resolveStrength = 0.2f; // Increase this to speed up collision resolution.
+			float xDir = 0.0f;
+			float yDir = 0.0f;
+
+			if (dx > 0) xDir = -1.0f;
+			else if (dx < 0) xDir = 1.0f;
+			if (dy > 0) yDir = -1.0f;
+			else if (dy < 0) yDir = 1.0f;
+
+			particle->Move(dx, 0.0f);
+			for (Tile* tile : m_tiles)
+			{
+				while (HasCollided(particle->GetCollider(), tile->GetRect()))
+				{
+					particle->Move(xDir * resolveStrength, 0.0f);
+				}
+			}
+			particle->Move(0.0f, dy);
+			for (Tile* tile : m_tiles)
+			{
+				if (HasCollided(particle->GetCollider(), tile->GetRect()))
+				{
+					particle->SetVelocity(0.0f, 0.0f);
+				}
+				while (HasCollided(particle->GetCollider(), tile->GetRect()))
+				{
+					particle->Move(0.0f, yDir * resolveStrength);
+				}
+			}
+		}
+
+	}
+}
+void Game::BulletEnemyCollisions()
+{
+	const static float knockBackStrength = 0.8f;
+	for (int i = 0; i < m_bullets.size(); i++)
+	{
+		Bullet* bullet = m_bullets[i];
+		bool collided = false;
+		for (int j = 0; j < m_enemies.size(); j++)
+		{
+			Enemy* enemy = m_enemies[j];
+			if (HasCollided(bullet->GetRect(), enemy->GetRect()))
+			{
+				collided = true;
+				float knockBack = bullet->GetXDirection() * knockBackStrength;
+				enemy->SetVelocity(knockBack, 1.0f); 
+				enemy->Damage(10.0f);
+				if (enemy->IsDead())
+				{
+					GenerateParticles(enemy->GetCenter(), 15);
+					m_enemies[j] = m_enemies.back();
+					m_enemies.pop_back();
+				}
+				break;
+			}
+		}
+		if (bullet->AliveTooLong())
+		{
+			m_bullets[i] = m_bullets.back();
+			m_bullets.pop_back();
+		}
+	}
+}
+void Game::PlayerTileCollisions()
+{
+	float dx = m_player->GetVelocityX();
+	float dy = m_player->GetVelocityY();
+
+	float resolveStrength = 0.02f; // Increase this to speed up collision resolution.
+	float xDir = 0.0f;
+	float yDir = 0.0f;
+
+	if (dx > 0) xDir = -1.0f;
+	else if (dx < 0) xDir = 1.0f;
+	if (dy > 0) yDir = -1.0f;
+	else if (dy < 0) yDir = 1.0f;
+
+	m_player->Move(dx, 0.0f);
+	for (Tile* tile : m_tiles)
+	{
+		while (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		{
+			m_player->Move(xDir * resolveStrength, 0.0f);
+		}
+	}
+	m_player->Move(0.0f, dy);
+	for (Tile* tile : m_tiles)
+	{
+		if (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		{
+			m_player->SetVelocity(dx, 0.0f);
+			if (dy < 0) m_player->SetCanJump();
+		}
+		while (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		{
+			m_player->Move(0.0f, yDir * resolveStrength);
+		}
+	}
+}
+void Game::GenerateParticles(glm::vec2 position, unsigned int numOfParticles)
+{
+	const static float maxSize = 2.5f;
+	const static float totalAngle = 3.14f;
+	const static float maxSpeed = 1.0f;
+
+	for (int i = 0; i < numOfParticles; i++)
+	{
+		float randomFloat1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randomFloat2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float angle = randomFloat1 * totalAngle;
+		glm::vec2 size = glm::vec2(maxSize * randomFloat2);
+	
+		particlesPtr->Reset();
+		particlesPtr->SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		particlesPtr->SetPosition(position);
+		particlesPtr->SetVelocity(maxSpeed * cos(angle), maxSpeed * sin(angle));
+		particlesPtr->SetSize(size);
+		particlesPtr++;
+		globals.PARTICLE_COUNT++;
+		if (globals.PARTICLE_COUNT == globals.MAX_PARTICLES)
+		{
+			particlesPtr = particles;
+			globals.PARTICLE_COUNT = 0;
+		}
+	}
+}
 void Game::Reset()
 {
-	for (Entity* entity : m_entities) delete entity;
+	delete m_player;
+	for (Enemy* enemy: m_enemies) delete enemy;
 	for (Tile* tile : m_tiles) delete tile;
 	for (Bullet* bullet : m_bullets) delete bullet;
-	m_entities.clear();
+	m_enemies.clear();
 	m_tiles.clear();
 	m_bullets.clear();
 }

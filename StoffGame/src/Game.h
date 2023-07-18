@@ -6,6 +6,7 @@
 #include "classes\Player.h"
 #include "classes\Enemy.h"
 #include "classes\Bullet.h"
+#include "classes\Particle.h"
 #include "utils\Map.h"
 
 #include <vector>
@@ -20,16 +21,25 @@ public:
 
 private:
 	void NewGame();
+	void Reset();
+
 	void LoadMap(const char* filePath, std::string mapName);
 	void UseMap(std::string mapName);
 	void LoadTextures();
+
 	void HandleInput();
-	void RenderFrame();
+
 	void Update(float timeStep);
+	void RenderFrame();
+
 	bool HasCollided(glm::vec4 rect1, glm::vec4 rect2);
-	void EntityTileCollisions(float timeStep);
+	void EntityTileCollisions();
 	void BulletTileCollisions();
-	void Reset();
+	void ParticleTileCollisions();
+	void BulletEnemyCollisions();
+	void PlayerTileCollisions();
+
+	void GenerateParticles(glm::vec2 position, unsigned int numOfParticles);
 
 private:
 	bool m_running = true;
@@ -39,9 +49,11 @@ private:
 	UserInput m_userInput = UserInput(m_window);
 
 	Player* m_player = nullptr;
-	std::vector<Entity*> m_entities;
+	std::vector<Enemy*> m_enemies; 
 	std::vector<Tile*> m_tiles;
-	std::vector<Bullet*> m_bullets;
+	std::vector<Bullet*> m_bullets; // ToDo: change this to fixed array of pointers.
+	Particle* particles = nullptr;
+	Particle* particlesPtr = nullptr;
 
 	std::unordered_map<std::string, float> m_textureIDs;
 	std::unordered_map<TileType, glm::vec4> m_tileTexCoords;
