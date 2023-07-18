@@ -6,6 +6,7 @@
 
 enum Animation
 {
+	NONE,
 	IDLE
 };
 
@@ -30,7 +31,7 @@ private:
 	unsigned int m_animationIndex;
 	std::unordered_map< Animation, std::vector<glm::vec4> > m_animations;
 	std::unordered_map< Animation, float > m_animationSpeeds;
-	Animation m_currentAnimation;
+	Animation m_currentAnimation = NONE;
 
 private:
 	void Reset();

@@ -8,6 +8,11 @@
 #include <iostream>
 #include <array>
 
+void WindowSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
 const unsigned int MAX_TEXTURES = 32;
 const unsigned int MAX_QUADS = 10000;
 const unsigned int MAX_VERTICES = MAX_QUADS * 4;
@@ -74,15 +79,17 @@ void Renderer2D::InitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    s_Window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Renderer", NULL, NULL);
+    s_Window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Even Deeper", NULL, NULL);
     if (s_Window == nullptr)
     {
         std::cout << "Failed to create window" << std::endl;
         glfwTerminate();
     }
     glfwMakeContextCurrent(s_Window);
-    glfwSetInputMode(s_Window, GLFW_CURSOR, GLFW_CURSOR);
-
+    glfwSetWindowAspectRatio(s_Window, 16, 9);
+    glfwSetInputMode(s_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetWindowSizeCallback(s_Window, WindowSizeCallback);
+    glfwSwapInterval(1); // Vsync.
     // Load OpenGL function pointers.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -267,6 +274,10 @@ float Renderer2D::LoadTexture(const char* filePath)
 GLFWwindow* Renderer2D::GetWindow()
 {
 	return s_Window;
+}
+glm::vec2 Renderer2D::GetCameraPosition()
+{
+    return { s_CData.position.x, s_CData.position.y };
 }
 void Renderer2D::SetCameraPosition(glm::vec2 position)
 {

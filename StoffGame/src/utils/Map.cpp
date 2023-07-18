@@ -12,8 +12,17 @@ Map::Map()
 Map::Map(const char* filePath)
 {
     static std::unordered_map<char, TileType> tokenToTypes;
-    tokenToTypes['d'] = DEFAULT;
-    tokenToTypes['e'] = EMPTY;
+    tokenToTypes['D'] = DEFAULT;
+    tokenToTypes['E'] = EMPTY;
+    tokenToTypes['q'] = TOP_LEFT;
+    tokenToTypes['w'] = TOP_MID;
+    tokenToTypes['e'] = TOP_RIGHT;
+    tokenToTypes['a'] = MID_LEFT;
+    tokenToTypes['s'] = MID_MID;
+    tokenToTypes['d'] = MID_RIGHT;
+    tokenToTypes['z'] = BOT_LEFT;
+    tokenToTypes['x'] = BOT_MID;
+    tokenToTypes['c'] = BOT_RIGHT;
 
     std::ifstream mapFile;
     mapFile.open(filePath, std::ios::binary);

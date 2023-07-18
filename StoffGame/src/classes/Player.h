@@ -10,7 +10,11 @@ public:
 	void Update(float timeStep) override;
 	
 	glm::vec4 GetCollider() override;
+	bool CanShoot();
+	void Shoot();
 
 private:
 	UserInput* m_inputs = nullptr;
+	bool m_canShoot = true;
+	float m_shootAccumulator = 0.0f;
 };

@@ -4,6 +4,8 @@
 #include "utils\UserInput.h"
 #include "utils\SpriteSheet.h"
 #include "classes\Player.h"
+#include "classes\Enemy.h"
+#include "classes\Bullet.h"
 #include "utils\Map.h"
 
 #include <vector>
@@ -25,7 +27,9 @@ private:
 	void RenderFrame();
 	void Update(float timeStep);
 	bool HasCollided(glm::vec4 rect1, glm::vec4 rect2);
-	void RunCollisions(float timeStep);
+	void EntityTileCollisions(float timeStep);
+	void BulletTileCollisions();
+	void Reset();
 
 private:
 	bool m_running = true;
@@ -37,8 +41,10 @@ private:
 	Player* m_player = nullptr;
 	std::vector<Entity*> m_entities;
 	std::vector<Tile*> m_tiles;
+	std::vector<Bullet*> m_bullets;
 
 	std::unordered_map<std::string, float> m_textureIDs;
+	std::unordered_map<TileType, glm::vec4> m_tileTexCoords;
 	std::unordered_map<std::string, SpriteSheet*> m_spriteSheets;
 	std::unordered_map<std::string, Map> m_maps;
 };

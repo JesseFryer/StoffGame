@@ -18,6 +18,8 @@ public:
 	static float LoadTexture(const char* filePath);
 
 	static GLFWwindow* GetWindow();
+	static glm::vec2 GetCameraPosition();
+
 	static void SetCameraPosition(glm::vec2 position);
 	static void MoveCamera(float dx, float dy);
 	static void ZoomCamera(float zoom);

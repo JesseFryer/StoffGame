@@ -11,10 +11,13 @@ AnimatedSprite::AnimatedSprite()
 // Update.
 void AnimatedSprite::Update(float timestep)
 {
-	m_animationCumulator += m_animationSpeeds[m_currentAnimation] * timestep;
-	m_animationIndex = (unsigned int)m_animationCumulator;
-	if (m_animationIndex > m_animations[m_currentAnimation].size() - 1) Reset();
-	SetTexCoords(m_animations[m_currentAnimation][m_animationIndex]);
+	if (m_currentAnimation != NONE)
+	{
+		m_animationCumulator += m_animationSpeeds[m_currentAnimation] * timestep;
+		m_animationIndex = (unsigned int)m_animationCumulator;
+		if (m_animationIndex > m_animations[m_currentAnimation].size() - 1) Reset();
+		SetTexCoords(m_animations[m_currentAnimation][m_animationIndex]);
+	}
 }
 
 // Setters.
