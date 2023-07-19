@@ -51,9 +51,10 @@ private:
 	Player* m_player = nullptr;
 	std::vector<Enemy*> m_enemies; 
 	std::vector<Tile*> m_tiles;
-	std::vector<Bullet*> m_bullets; // ToDo: change this to fixed array of pointers.
-	Particle* particles = nullptr;
-	Particle* particlesPtr = nullptr;
+	Bullet* m_bullets = nullptr; 
+	Bullet* m_bulletsPtr = nullptr; 
+	Particle* m_particles = nullptr;
+	Particle* m_particlesPtr = nullptr;
 
 	std::unordered_map<std::string, float> m_textureIDs;
 	std::unordered_map<TileType, glm::vec4> m_tileTexCoords;

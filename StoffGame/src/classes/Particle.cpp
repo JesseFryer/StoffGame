@@ -1,6 +1,6 @@
 #include "Particle.h"
 
-const static float s_maxAliveTime = 1.0f; // 1 seconds.
+const static float s_maxAliveTime = 3.0f; // 3 seconds.
 
 Particle::Particle()
 {
@@ -22,7 +22,7 @@ void Particle::Update(float timeStep)
 	m_aliveTime += timeStep;
 	if (AliveTooLong()) m_alive = false; 
 
-	SetVelocity(GetVelocityX() * 0.99f, GetVelocityY()); // slowly reduce x velocity.
+	SetVelocity(GetVelocityX() * 0.98f, GetVelocityY()); // slowly reduce x velocity.
 	Entity::Update(timeStep);
 }
 
