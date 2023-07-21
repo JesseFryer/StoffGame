@@ -12,10 +12,10 @@ struct Globals
 
 	const glm::vec2 SPAWN_POINT = glm::vec2(600.0f, 1000.0f);
 
-	const unsigned int MAX_PARTICLES = 100;
+	const unsigned int MAX_PARTICLES = 1500;
 	unsigned int PARTICLE_COUNT = 0;
 
-	const unsigned int MAX_BULLETS = 50;
+	const unsigned int MAX_BULLETS = 20;
 	unsigned int BULLET_COUNT = 0;
 };
 static Globals globals;
@@ -29,10 +29,14 @@ Game::Game()
 	glfwSetScrollCallback(m_window, ScrollCallback);
 	LoadTextures();
 	LoadMap("res/maps/map1.txt", "map1");
-	m_particles = new Particle[globals.MAX_PARTICLES];
-	m_particlesPtr = m_particles;
-	m_bullets = new Bullet[globals.MAX_BULLETS];
-	m_bulletsPtr = m_bullets;
+	for (size_t i = 0; i < globals.MAX_PARTICLES; i++)
+	{
+		m_particles[i] = Particle();
+	}
+	for (size_t i = 0; i < globals.MAX_BULLETS; i++)
+	{
+		m_bullets[i] = Bullet();
+	}
 	NewGame();
 }
 Game::~Game()
@@ -100,7 +104,6 @@ void Game::UseMap(std::string mapName)
 	const float TILE_SIZE = 16.0f;
 
 	// Clear old map.
-	for (Tile* tile : m_tiles) delete tile;
 	m_tiles.clear();
 
 	std::vector<std::vector<TileType>> map = m_maps[mapName].GetTiles();
@@ -112,9 +115,9 @@ void Game::UseMap(std::string mapName)
 		{
 			if (type != EMPTY)
 			{
-				Tile* tile = new Tile(glm::vec2(xPos, yPos), type);
-				tile->SetTexID(m_textureIDs["tiles"]);
-				tile->SetTexCoords(m_tileTexCoords[type]);
+				Tile tile = Tile(glm::vec2(xPos, yPos), type);
+				tile.SetTexID(m_textureIDs["tiles"]);
+				tile.SetTexCoords(m_tileTexCoords[type]);
 				m_tiles.push_back(tile);
 			}
 			xPos += TILE_SIZE;
@@ -162,15 +165,13 @@ void Game::HandleInput()
 		if (vectorLength == 0.0f) vectorLength = 0.01f; // avoid divide by zero.
 		glm::vec2 unitVector = glm::vec2(xOffset / vectorLength, yOffset / vectorLength);
 
-		m_bulletsPtr->SetPosition(m_player->GetCenter());
-		m_bulletsPtr->SetUnitVector(unitVector);
-		m_bulletsPtr->SetActive();
-		m_bulletsPtr++;
-		globals.BULLET_COUNT++;
-		if (globals.BULLET_COUNT > globals.MAX_BULLETS)
+		m_bullets[m_bulletsIndex].SetPosition(m_player->GetCenter());
+		m_bullets[m_bulletsIndex].SetUnitVector(unitVector);
+		m_bullets[m_bulletsIndex].SetActive();
+		m_bulletsIndex++;
+		if (m_bulletsIndex > globals.MAX_BULLETS)
 		{
-			globals.BULLET_COUNT = 0;
-			m_bulletsPtr = m_bullets;
+			m_bulletsIndex = 0;
 		}
 	}
 }
@@ -181,22 +182,22 @@ void Game::RenderFrame()
 
 	m_renderer.StartBatch();
 
-	for (Tile* tile : m_tiles)
+	for (Tile tile : m_tiles)
 	{
-		tile->Render(m_renderer);
+		tile.Render(m_renderer);
 	}
 	m_player->Render(m_renderer);
 	for (Enemy* entity : m_enemies) 
 	{
 		entity->Render(m_renderer);
 	}
-	for (Bullet* bullet = m_bullets; bullet < m_bullets + globals.MAX_BULLETS; bullet++) 
+	for (size_t i = 0; i < globals.MAX_BULLETS; i++)
 	{
-		if (bullet->IsActive()) bullet->Render(m_renderer);
+		if (m_bullets[i].IsActive()) m_bullets[i].Render(m_renderer);
 	}
-	for (Particle* particle = m_particles; particle < m_particles + globals.MAX_PARTICLES; particle++)
+	for (size_t i = 0; i < globals.MAX_PARTICLES; i++)
 	{
-		if (particle->IsAlive()) particle->Render(m_renderer);
+		if (m_particles[i].IsAlive()) m_particles[i].Render(m_renderer);
 	}
 
 	m_renderer.SubmitBatch();
@@ -207,19 +208,19 @@ void Game::Update(float timeStep)
 {
 	m_player->Update(timeStep);
 	for (Enemy* enemy : m_enemies) enemy->Update(timeStep);
-	for (Bullet* bullet = m_bullets; bullet < m_bullets + globals.MAX_BULLETS; bullet++)
+	for (size_t i = 0; i < globals.MAX_BULLETS; i++)
 	{
-		if (bullet->IsActive()) bullet->Update(timeStep);
+		if (m_bullets[i].IsActive()) m_bullets[i].Update(timeStep);
 	}
-	for (Particle* p = m_particles; p < m_particles + globals.MAX_PARTICLES; p++)
+	for (size_t i = 0; i < globals.MAX_PARTICLES; i++)
 	{
-		if (p->IsAlive()) p->Update(timeStep);
+		if (m_particles[i].IsAlive()) m_particles[i].Update(timeStep);
 	}
-	PlayerTileCollisions();
-	EntityTileCollisions();
-	BulletTileCollisions();
-	BulletEnemyCollisions();
-	ParticleTileCollisions();
+	PlayerTileCollisions(timeStep);
+	EntityTileCollisions(timeStep);
+	BulletTileCollisions(timeStep);
+	BulletEnemyCollisions(timeStep);
+	ParticleTileCollisions(timeStep);
 }
 bool Game::HasCollided(glm::vec4 rect1, glm::vec4 rect2)
 {
@@ -233,7 +234,7 @@ bool Game::HasCollided(glm::vec4 rect1, glm::vec4 rect2)
 	}
 	return false;
 }
-void Game::EntityTileCollisions()
+void Game::EntityTileCollisions(float timeStep)
 {
 	for (Enemy* entity : m_enemies)
 	{
@@ -249,54 +250,54 @@ void Game::EntityTileCollisions()
 		if (dy > 0) yDir = -1.0f;
 		else if (dy < 0) yDir = 1.0f;
 
-		entity->Move(dx, 0.0f);
-		for (Tile* tile : m_tiles)
+		entity->Move(dx * timeStep, 0.0f);
+		for (Tile tile : m_tiles)
 		{
-			while (HasCollided(entity->GetCollider(), tile->GetRect()))
+			while (HasCollided(entity->GetCollider(), tile.GetRect()))
 			{
 				entity->Move(xDir * resolveStrength, 0.0f);
 			}
 		}
-		entity->Move(0.0f, dy);
-		for (Tile* tile : m_tiles)
+		entity->Move(0.0f, dy * timeStep);
+		for (Tile tile : m_tiles)
 		{
-			if (HasCollided(entity->GetCollider(), tile->GetRect()))
+			if (HasCollided(entity->GetCollider(), tile.GetRect()))
 			{
 				entity->SetVelocity(dx, 0.0f);
 				if (dy < 0) entity->SetCanJump();
 			}
-			while (HasCollided(entity->GetCollider(), tile->GetRect()))
+			while (HasCollided(entity->GetCollider(), tile.GetRect()))
 			{
 				entity->Move(0.0f, yDir * resolveStrength);
 			}
 		}
 	}
 }
-void Game::BulletTileCollisions()
+void Game::BulletTileCollisions(float timeStep)
 {
-	for (Bullet* bullet = m_bullets; bullet < m_bullets + globals.MAX_BULLETS; bullet++)
+	for (size_t i = 0; i < globals.MAX_BULLETS; i++)
 	{
-		if (bullet->IsActive())
+		if (m_bullets[i].IsActive())
 		{
-			for (Tile* tile : m_tiles)
+			for (Tile tile : m_tiles)
 			{
-				if (HasCollided(bullet->GetRect(), tile->GetRect()))
+				if (HasCollided(m_bullets[i].GetRect(), tile.GetRect()))
 				{
-					bullet->SetInactive();
+					m_bullets[i].SetInactive();
 					break;
 				}
 			}
 		}
 	}
 }
-void Game::ParticleTileCollisions()
+void Game::ParticleTileCollisions(float timeStep)
 {
-	for (Particle* particle = m_particles; particle < m_particles + globals.MAX_PARTICLES; particle++)
+	for (size_t i = 0; i < globals.MAX_PARTICLES; i++)
 	{
-		if (particle->IsAlive())
+		if (m_particles[i].IsAlive())
 		{
-			float dx = particle->GetVelocityX();
-			float dy = particle->GetVelocityY();
+			float dx = m_particles[i].GetVelocityX();
+			float dy = m_particles[i].GetVelocityY();
 
 			float resolveStrength = 0.2f; // Increase this to speed up collision resolution.
 			float xDir = 0.0f;
@@ -307,54 +308,59 @@ void Game::ParticleTileCollisions()
 			if (dy > 0) yDir = -1.0f;
 			else if (dy < 0) yDir = 1.0f;
 
-			particle->Move(dx, 0.0f);
-			for (Tile* tile : m_tiles)
+			m_particles[i].Move(dx * timeStep, 0.0f);
+			for (Tile tile : m_tiles)
 			{
-				if (HasCollided(particle->GetCollider(), tile->GetRect()))
+				if (HasCollided(m_particles[i].GetRect(), tile.GetRect()))
 				{
-					particle->SetVelocity(0.0f, particle->GetVelocityY());
-				}
-				while (HasCollided(particle->GetCollider(), tile->GetRect()))
-				{
-					particle->Move(xDir * resolveStrength, 0.0f);
+					dx = 0.0f;
+					float resolve = xDir * resolveStrength;
+					while (HasCollided(m_particles[i].GetRect(), tile.GetRect()))
+					{
+						m_particles[i].Move(resolve, 0.0f);
+					}
+					break;
 				}
 			}
-			particle->Move(0.0f, dy);
-			for (Tile* tile : m_tiles)
+			m_particles[i].Move(0.0f, dy * timeStep);
+			for (Tile tile : m_tiles)
 			{
-				if (HasCollided(particle->GetCollider(), tile->GetRect()))
+				if (HasCollided(m_particles[i].GetRect(), tile.GetRect()))
 				{
-					particle->SetVelocity(particle->GetVelocityX(), 0.0f);
-				}
-				while (HasCollided(particle->GetCollider(), tile->GetRect()))
-				{
-					particle->Move(0.0f, yDir * resolveStrength);
+					dy = 0.0f;
+					float resolve = yDir * resolveStrength;
+					while (HasCollided(m_particles[i].GetRect(), tile.GetRect()))
+					{
+						m_particles[i].Move(0.0f, resolve);
+					}
+					break;
 				}
 			}
+			m_particles[i].SetVelocity(dx, dy);
 		}
 
 	}
 }
-void Game::BulletEnemyCollisions()
+void Game::BulletEnemyCollisions(float timeStep)
 {
-	const static float knockBackStrength = 0.8f;
-	for (Bullet* bullet = m_bullets; bullet < m_bullets + globals.MAX_BULLETS; bullet++)
+	const static float knockBackStrength = 100.0f;
+	for (size_t i = 0; i  < globals.MAX_BULLETS; i++)
 	{
-		if (bullet->IsActive())
+		if (m_bullets[i].IsActive())
 		{
 			bool collided = false;
 			for (int j = 0; j < m_enemies.size(); j++)
 			{
 				Enemy* enemy = m_enemies[j];
-				if (HasCollided(bullet->GetRect(), enemy->GetRect()))
+				if (HasCollided(m_bullets[i].GetRect(), enemy->GetRect()))
 				{
 					collided = true;
-					float knockBack = bullet->GetXDirection() * knockBackStrength;
-					enemy->SetVelocity(knockBack, 1.0f);
+					float knockBack = m_bullets[i].GetXDirection() * knockBackStrength;
+					enemy->SetVelocity(knockBack, 50.0f);
 					enemy->Damage(10.0f);
 					if (enemy->IsDead())
 					{
-						GenerateParticles(enemy->GetCenter(), 15);
+						GenerateParticles(enemy->GetCenter(), 100);
 						m_enemies[j] = m_enemies.back();
 						m_enemies.pop_back();
 					}
@@ -364,7 +370,7 @@ void Game::BulletEnemyCollisions()
 		}
 	}
 }
-void Game::PlayerTileCollisions()
+void Game::PlayerTileCollisions(float timeStep)
 {
 	float dx = m_player->GetVelocityX();
 	float dy = m_player->GetVelocityY();
@@ -378,23 +384,23 @@ void Game::PlayerTileCollisions()
 	if (dy > 0) yDir = -1.0f;
 	else if (dy < 0) yDir = 1.0f;
 
-	m_player->Move(dx, 0.0f);
-	for (Tile* tile : m_tiles)
+	m_player->Move(dx * timeStep, 0.0f);
+	for (Tile tile : m_tiles)
 	{
-		while (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		while (HasCollided(m_player->GetCollider(), tile.GetRect()))
 		{
 			m_player->Move(xDir * resolveStrength, 0.0f);
 		}
 	}
-	m_player->Move(0.0f, dy);
-	for (Tile* tile : m_tiles)
+	m_player->Move(0.0f, dy * timeStep);
+	for (Tile tile : m_tiles)
 	{
-		if (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		if (HasCollided(m_player->GetCollider(), tile.GetRect()))
 		{
 			m_player->SetVelocity(dx, 0.0f);
 			if (dy < 0) m_player->SetCanJump();
 		}
-		while (HasCollided(m_player->GetCollider(), tile->GetRect()))
+		while (HasCollided(m_player->GetCollider(), tile.GetRect()))
 		{
 			m_player->Move(0.0f, yDir * resolveStrength);
 		}
@@ -402,36 +408,34 @@ void Game::PlayerTileCollisions()
 }
 void Game::GenerateParticles(glm::vec2 position, unsigned int numOfParticles)
 {
-	const static float maxSize = 2.5f;
+	const static float maxSize = 3.5f;
 	const static float totalAngle = 3.14f;
-	const static float maxSpeed = 1.0f;
+	const static float maxSpeed = 350.0f;
 
 	for (int i = 0; i < numOfParticles; i++)
 	{
 		float randomFloat1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float randomFloat2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randomFloat3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float angle = randomFloat1 * totalAngle;
 		glm::vec2 size = glm::vec2(maxSize * randomFloat2);
+		float speed = maxSpeed * randomFloat3;
 	
-		m_particlesPtr->Reset();
-		m_particlesPtr->SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		m_particlesPtr->SetPosition(position);
-		m_particlesPtr->SetVelocity(maxSpeed * cos(angle), maxSpeed * sin(angle));
-		m_particlesPtr->SetSize(size);
-		m_particlesPtr++;
-		globals.PARTICLE_COUNT++;
-		if (globals.PARTICLE_COUNT == globals.MAX_PARTICLES)
+		m_particles[m_particlesIndex].Reset();
+		m_particles[m_particlesIndex].SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		m_particles[m_particlesIndex].SetPosition(position);
+		m_particles[m_particlesIndex].SetVelocity(speed * cos(angle), speed * sin(angle));
+		m_particles[m_particlesIndex].SetSize(size);
+		m_particlesIndex++;
+		
+		if (m_particlesIndex == globals.MAX_PARTICLES)
 		{
-			m_particlesPtr = m_particles;
-			globals.PARTICLE_COUNT = 0;
+			m_particlesIndex = 0;
 		}
 	}
 }
 void Game::Reset()
 {
-	delete m_player;
-	for (Enemy* enemy: m_enemies) delete enemy;
-	for (Tile* tile : m_tiles) delete tile;
 	m_enemies.clear();
 	m_tiles.clear();
 }

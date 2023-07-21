@@ -33,11 +33,11 @@ private:
 	void RenderFrame();
 
 	bool HasCollided(glm::vec4 rect1, glm::vec4 rect2);
-	void EntityTileCollisions();
-	void BulletTileCollisions();
-	void ParticleTileCollisions();
-	void BulletEnemyCollisions();
-	void PlayerTileCollisions();
+	void EntityTileCollisions(float timeStep);
+	void BulletTileCollisions(float timeStep);
+	void ParticleTileCollisions(float timeStep);
+	void BulletEnemyCollisions(float timeStep);
+	void PlayerTileCollisions(float timeStep);
 
 	void GenerateParticles(glm::vec2 position, unsigned int numOfParticles);
 
@@ -50,11 +50,11 @@ private:
 
 	Player* m_player = nullptr;
 	std::vector<Enemy*> m_enemies; 
-	std::vector<Tile*> m_tiles;
-	Bullet* m_bullets = nullptr; 
-	Bullet* m_bulletsPtr = nullptr; 
-	Particle* m_particles = nullptr;
-	Particle* m_particlesPtr = nullptr;
+	std::vector<Tile> m_tiles;
+	Bullet m_bullets[50];
+	size_t m_bulletsIndex = 0; 
+	Particle m_particles[1500];
+	size_t m_particlesIndex = 0;
 
 	std::unordered_map<std::string, float> m_textureIDs;
 	std::unordered_map<TileType, glm::vec4> m_tileTexCoords;

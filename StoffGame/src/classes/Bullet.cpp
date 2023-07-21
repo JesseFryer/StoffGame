@@ -1,6 +1,6 @@
 #include "Bullet.h"
 
-static float BULLET_SPEED = 6.0f;
+static float BULLET_SPEED = 800.0f;
 
 Bullet::Bullet()
 {
@@ -16,8 +16,8 @@ void Bullet::Update(float timeStep)
 	if (AliveTooLong()) m_isActive = false;
 	else
 	{
-		float dx = BULLET_SPEED * m_xDir;
-		float dy = BULLET_SPEED * m_yDir;
+		float dx = BULLET_SPEED * m_xDir * timeStep;
+		float dy = BULLET_SPEED * m_yDir * timeStep;
 		Move(dx, dy);
 	}
 }

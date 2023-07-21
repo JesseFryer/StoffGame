@@ -1,7 +1,7 @@
 #include "Player.h"
 
-static float SPEED = 150.0f;
-static float JUMP_STRENGTH = 3.0f;
+static float SPEED = 200.0f;
+static float JUMP_STRENGTH = 300.0f;
 static float TIME_PER_SHOT = 0.1f; // 0.1 seconds.
 
 Player::Player(UserInput* inputs) 
@@ -12,8 +12,8 @@ Player::Player(UserInput* inputs)
 void Player::Update(float timeStep)
 {
 	float velX = 0.0f;
-	if (m_inputs->IsPressed(Key_D)) velX += SPEED * timeStep;
-	if (m_inputs->IsPressed(Key_A)) velX += -SPEED * timeStep;
+	if (m_inputs->IsPressed(Key_D)) velX += SPEED;
+	if (m_inputs->IsPressed(Key_A)) velX += -SPEED;
 
 	float velY = 0.0f;
 	if (m_inputs->IsPressed(Key_SPC) && CanJump())

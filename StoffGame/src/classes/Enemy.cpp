@@ -2,8 +2,8 @@
 #include <iostream>
 
 static Player* s_player = nullptr; // All enemies will have access to player info.
-static float s_acceleration = 2.0f;
-const static float s_maxSpeed = 1.0f;
+static float s_acceleration = 5.0f;
+const static float s_maxSpeed = 150.0f;
 
 Enemy::Enemy(glm::vec2 position)
 {
@@ -20,15 +20,15 @@ void Enemy::Update(float timeStep)
 	float dVelY = 0.0f;
 
 	// Basic logic to follow player.
-	if (s_player->GetPosition()[0] > GetPosition()[0]) dVelX += s_acceleration * timeStep;
-	if (s_player->GetPosition()[0] < GetPosition()[0]) dVelX -= s_acceleration * timeStep;
+	if (s_player->GetPosition()[0] > GetPosition()[0]) dVelX += s_acceleration;
+	if (s_player->GetPosition()[0] < GetPosition()[0]) dVelX -= s_acceleration;
 	float velXResult = dVelX + GetVelocityX();
 	if (GetVelocityY() == 0.0f)
 	{
 		if (velXResult > s_maxSpeed) velXResult = s_maxSpeed;
 		if (velXResult < -s_maxSpeed) velXResult = -s_maxSpeed;
 	}
-	SetVelocity(velXResult, GetVelocityY()); // No acceleration on x moevement.
+	SetVelocity(velXResult, GetVelocityY()); 
 	Entity::Update(timeStep);
 }
 

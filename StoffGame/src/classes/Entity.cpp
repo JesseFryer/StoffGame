@@ -1,9 +1,9 @@
 #include "Entity.h"
 
 
-static float SPEED = 100.0f;
-static float GRAVITY = -10.0f;
-static float MAX_FALL_SPEED = -5.0f;
+static float SPEED = 300.0f;
+static float GRAVITY = -800.0f;
+static float MAX_FALL_SPEED = -1200.0f;
 
 Entity::Entity()
 {
