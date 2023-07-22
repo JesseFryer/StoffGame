@@ -5,7 +5,7 @@ const static float s_maxAliveTime = 3.0f; // 3 seconds.
 Particle::Particle()
 {
 	SetCurrentAnimation(NONE);
-	SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
 	SetGravity(-400.0f);
 }
 
@@ -22,7 +22,7 @@ void Particle::Update(float timeStep)
 	m_aliveTime += timeStep;
 	if (AliveTooLong()) m_alive = false; 
 
-	SetVelocity(GetVelocityX() * 0.999f, GetVelocityY()); // slowly reduce x velocity.
+	SetVelocity(GetVelocityX() * 0.98f, GetVelocityY()); // slowly reduce x velocity.
 	Entity::Update(timeStep);
 }
 

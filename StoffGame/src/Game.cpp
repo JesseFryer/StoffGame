@@ -12,7 +12,7 @@ struct Globals
 
 	const glm::vec2 SPAWN_POINT = glm::vec2(600.0f, 1000.0f);
 
-	const unsigned int MAX_PARTICLES = 1500;
+	const unsigned int MAX_PARTICLES = 1000;
 	unsigned int PARTICLE_COUNT = 0;
 
 	const unsigned int MAX_BULLETS = 20;
@@ -221,6 +221,7 @@ void Game::Update(float timeStep)
 	BulletTileCollisions(timeStep);
 	BulletEnemyCollisions(timeStep);
 	ParticleTileCollisions(timeStep);
+	PlayerEnemyCollisions();
 }
 bool Game::HasCollided(glm::vec4 rect1, glm::vec4 rect2)
 {
@@ -399,6 +400,7 @@ void Game::PlayerTileCollisions(float timeStep)
 		{
 			m_player->SetVelocity(dx, 0.0f);
 			if (dy < 0) m_player->SetCanJump();
+			m_player->StopKnockBack();
 		}
 		while (HasCollided(m_player->GetCollider(), tile.GetRect()))
 		{
@@ -406,11 +408,38 @@ void Game::PlayerTileCollisions(float timeStep)
 		}
 	}
 }
+void Game::PlayerEnemyCollisions()
+{
+	glm::vec4 playerCollider = m_player->GetCollider();
+	if (!m_player->IsImmune())
+	{
+		for (Enemy* enemy : m_enemies)
+		{
+			if (HasCollided(playerCollider, enemy->GetRect()))
+			{
+				float knockback;
+				if (enemy->GetCenter()[0] > m_player->GetCenter()[0])
+				{
+					knockback = -1.0f;
+				}
+				else
+				{
+					knockback = 1.0f;
+				}
+				m_player->KnockBack(knockback);
+				m_player->SetVelocity(m_player->GetVelocityX(), 300.0f);
+				m_player->Damage(10.0f);
+				break;
+			}
+		}
+	}
+
+}
 void Game::GenerateParticles(glm::vec2 position, unsigned int numOfParticles)
 {
-	const static float maxSize = 3.5f;
+	const static float maxSize = 2.5f;
 	const static float totalAngle = 3.14f;
-	const static float maxSpeed = 350.0f;
+	const static float maxSpeed = 270.0f;
 
 	for (int i = 0; i < numOfParticles; i++)
 	{
@@ -422,7 +451,6 @@ void Game::GenerateParticles(glm::vec2 position, unsigned int numOfParticles)
 		float speed = maxSpeed * randomFloat3;
 	
 		m_particles[m_particlesIndex].Reset();
-		m_particles[m_particlesIndex].SetColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 		m_particles[m_particlesIndex].SetPosition(position);
 		m_particles[m_particlesIndex].SetVelocity(speed * cos(angle), speed * sin(angle));
 		m_particles[m_particlesIndex].SetSize(size);

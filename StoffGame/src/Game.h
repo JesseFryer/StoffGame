@@ -38,6 +38,7 @@ private:
 	void ParticleTileCollisions(float timeStep);
 	void BulletEnemyCollisions(float timeStep);
 	void PlayerTileCollisions(float timeStep);
+	void PlayerEnemyCollisions();
 
 	void GenerateParticles(glm::vec2 position, unsigned int numOfParticles);
 
@@ -53,7 +54,7 @@ private:
 	std::vector<Tile> m_tiles;
 	Bullet m_bullets[50];
 	size_t m_bulletsIndex = 0; 
-	Particle m_particles[1500];
+	Particle m_particles[1000];
 	size_t m_particlesIndex = 0;
 
 	std::unordered_map<std::string, float> m_textureIDs;

@@ -2,8 +2,8 @@
 
 
 static float SPEED = 300.0f;
-static float GRAVITY = -800.0f;
-static float MAX_FALL_SPEED = -1200.0f;
+static float GRAVITY = -1500.0f;
+static float MAX_FALL_SPEED = -2500.0f;
 
 Entity::Entity()
 {
