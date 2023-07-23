@@ -16,7 +16,9 @@ public:
 	void KnockBack(float direction);
 	void StopKnockBack();
 	bool IsImmune();
+	bool IsDead();
 	void Damage(float dmg);
+	void ResetHealth();
 
 private:
 	HealthBar m_healthBar = HealthBar(GetPosition());

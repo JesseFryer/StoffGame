@@ -8,6 +8,7 @@
 #include "classes\Bullet.h"
 #include "classes\Particle.h"
 #include "utils\Map.h"
+#include "MainMenu.h"
 
 #include <vector>
 #include <string>
@@ -21,7 +22,6 @@ public:
 
 private:
 	void NewGame();
-	void Reset();
 
 	void LoadMap(const char* filePath, std::string mapName);
 	void UseMap(std::string mapName);
@@ -47,7 +47,8 @@ private:
 
 	Renderer2D m_renderer;
 	GLFWwindow* m_window = m_renderer.GetWindow();
-	UserInput m_userInput = UserInput(m_window);
+	UserInput m_userInput { m_window };
+	MainMenu m_menu { &m_renderer, &m_userInput };
 
 	Player* m_player = nullptr;
 	std::vector<Enemy*> m_enemies; 

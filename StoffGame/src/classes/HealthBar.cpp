@@ -31,6 +31,12 @@ void HealthBar::SetHealth(float hp)
 void HealthBar::ChangeHealthBy(float hp)
 {
 	m_hp += hp;
+	if (m_hp > s_maxHp) m_hp = s_maxHp;
+}
+
+void HealthBar::ResetHealth()
+{
+	m_hp = 100.0f;
 }
 
 

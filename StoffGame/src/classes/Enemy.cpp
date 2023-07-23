@@ -8,7 +8,7 @@ const static float s_maxSpeed = 150.0f;
 Enemy::Enemy(glm::vec2 position)
 {
 	SetPosition(position);
-	SetSize(glm::vec2(15.0f));
+	SetSize(glm::vec2(16.0f, 8.0f));
 }
 
 void Enemy::Update(float timeStep)

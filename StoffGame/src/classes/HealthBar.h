@@ -11,6 +11,7 @@ public:
 	float GetHealth();
 	void SetHealth(float hp);
 	void ChangeHealthBy(float hp);
+	void ResetHealth();
 
 	void Update();
 	void Render(Renderer2D& renderer);

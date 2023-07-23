@@ -96,9 +96,18 @@ bool Player::IsImmune()
 {
 	return m_immune;
 }
+bool Player::IsDead()
+{
+	if (m_healthBar.GetHealth() <= 0) return true;
+	return false;
+}
 void Player::Damage(float dmg)
 {
 	m_healthBar.ChangeHealthBy(-dmg);
+}
+void Player::ResetHealth()
+{
+	m_healthBar.ResetHealth();
 }
 void Player::Render(Renderer2D& renderer)
 {

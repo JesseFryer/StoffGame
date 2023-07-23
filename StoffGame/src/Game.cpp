@@ -29,6 +29,9 @@ Game::Game()
 	glfwSetScrollCallback(m_window, ScrollCallback);
 	LoadTextures();
 	LoadMap("res/maps/map1.txt", "map1");
+	UseMap("map1");
+
+	// Initialise recycleable instances.
 	for (size_t i = 0; i < globals.MAX_PARTICLES; i++)
 	{
 		m_particles[i] = Particle();
@@ -37,11 +40,21 @@ Game::Game()
 	{
 		m_bullets[i] = Bullet();
 	}
+
+	// Setup animations.
+	m_player = new Player(&m_userInput);
+	m_player->SetTexID(m_textureIDs["player"]);
+	std::vector<unsigned int> playerIdleFrames = { 0, 1, 2, 3, 4, 5 };
+	m_player->AddAnimation(IDLE, m_spriteSheets["player"]->GetAnimation(playerIdleFrames, false), 8.0f);
+	m_player->SetCurrentAnimation(IDLE);
+	m_player->SetSize(glm::vec2(20.0f, 32.0f));
+	Enemy::SetPlayerPointer(m_player);
+
 	NewGame();
 }
 Game::~Game()
 {
-	Reset();
+	delete m_player;
 }
 
 void Game::Run()
@@ -63,6 +76,7 @@ void Game::Run()
 			{
 				Enemy* enemy = new Enemy(glm::vec2(i * 450.0f, 1000.0f));
 				enemy->SetCurrentAnimation(NONE);
+				enemy->SetTexID(m_textureIDs["enemy"]);
 				m_enemies.push_back(enemy);
 			}
 			logFpsCounter = 0;
@@ -70,30 +84,27 @@ void Game::Run()
 		}
 
 		Update(timeStep);
-
 		m_renderer.SetCameraPosition(m_player->GetCenter());
 		m_renderer.ZoomCamera(globals.MOUSE_SCROLL);
 		globals.MOUSE_SCROLL *= 0.95f; // Slowly decreases scroll value for smooth zooming in/out.
-
 		RenderFrame();
+
+		if (m_player->IsDead())
+		{
+			m_menu.Run();
+			if (m_menu.NewGame()) NewGame();
+			if (m_menu.Quit()) m_running = false;
+			lastTime = glfwGetTime();
+		}
 	}
 	glfwTerminate();
 }
 
 void Game::NewGame()
 {
-	Reset();
-
-	m_player = new Player(&m_userInput);
-	m_player->SetTexID(m_textureIDs["player"]);
-	std::vector<unsigned int> playerIdleFrames = { 0, 1, 2, 3, 4, 5 };
-	m_player->AddAnimation(IDLE, m_spriteSheets["player"]->GetAnimation(playerIdleFrames, false), 8.0f);
-	m_player->SetCurrentAnimation(IDLE);
-	m_player->SetSize(glm::vec2(20.0f, 32.0f));
+	m_enemies.clear();
 	m_player->SetPosition(globals.SPAWN_POINT);
-
-	Enemy::SetPlayerPointer(m_player);
-	UseMap("map1");
+	m_player->ResetHealth();
 }
 void Game::LoadMap(const char* filePath, std::string mapName)
 {
@@ -133,6 +144,8 @@ void Game::LoadTextures()
 	m_spriteSheets["coin"] = new SpriteSheet(208, 16, 16, 16);
 	m_textureIDs["tiles"] = m_renderer.LoadTexture("res/sprites/TileSet.png");
 	m_spriteSheets["tiles"] = new SpriteSheet(128, 128, 16, 16);
+	m_textureIDs["enemy"] = m_renderer.LoadTexture("res/sprites/enemy.png");
+	m_spriteSheets["enemy"] = new SpriteSheet(16, 8, 16, 8);
 	m_tileTexCoords[TOP_LEFT]  = m_spriteSheets["tiles"]->GetTexCoords(0, 2, 1, 1, 0);
 	m_tileTexCoords[TOP_MID]   = m_spriteSheets["tiles"]->GetTexCoords(1, 2, 1, 1, 0);
 	m_tileTexCoords[TOP_RIGHT] = m_spriteSheets["tiles"]->GetTexCoords(2, 2, 1, 1, 0);
@@ -361,9 +374,10 @@ void Game::BulletEnemyCollisions(float timeStep)
 					enemy->Damage(10.0f);
 					if (enemy->IsDead())
 					{
-						GenerateParticles(enemy->GetCenter(), 100);
+						GenerateParticles(enemy->GetCenter(), 150);
 						m_enemies[j] = m_enemies.back();
 						m_enemies.pop_back();
+						m_player->Damage(-1.0f);
 					}
 					break;
 				}
@@ -461,9 +475,4 @@ void Game::GenerateParticles(glm::vec2 position, unsigned int numOfParticles)
 			m_particlesIndex = 0;
 		}
 	}
-}
-void Game::Reset()
-{
-	m_enemies.clear();
-	m_tiles.clear();
 }
